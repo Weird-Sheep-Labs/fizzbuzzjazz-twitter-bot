@@ -1,0 +1,46 @@
+name: CI/CD
+
+on: push
+
+env:
+  PYTHON_VERSION: 3.9
+
+
+jobs:
+  default:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Install dependencies
+        run: |
+          . install_poetry.sh
+          poetry install
+      - name: Format code
+        run: |
+          poetry run pre-commit run -a
+      - name: Run tests
+        run: |
+          poetry run pytest
+  production-deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    needs: default
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Deploy
+        run: |
+          . install_poetry.sh
+          . install_deployment_dependencies.sh
+          . build_package.sh
+          aws s3 mv deployment-package.zip s3://fizzbuzzjazz-twitter-bot
+          aws lambda update-function-code --function-name ${{ secrets.AWS_LAMBDA_FUNCTION_NAME }} --region ${{ secrets.AWS_LAMBDA_REGION }}      
+  
