@@ -47,5 +47,5 @@ jobs:
           . install_poetry.sh
           . build_package.sh
           aws s3 mv deployment-package.zip s3://fizzbuzzjazz-twitter-bot
-          aws lambda update-function-code --function-name ${{ secrets.AWS_LAMBDA_FUNCTION_NAME }} --region ${{ secrets.AWS_LAMBDA_REGION }}      
+          aws lambda update-function-code --function-name ${{ secrets.AWS_LAMBDA_FUNCTION_NAME }} --region ${{ secrets.AWS_LAMBDA_REGION }} --s3-bucket fizzbuzzjazz-twitter-bot --s3-key deployment-package.zip
   
