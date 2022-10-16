@@ -36,15 +36,6 @@ jobs:
         uses: actions/setup-python@v3
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      - name: Configure Git
-        run: |
-          git config --global user.email "github-actions@github.com"
-          git config --global user.name "github-actions"
-      - name: Git tag
-        run: |
-          export VERSION=$(poetry version -s)
-          git tag -a $VERSION -m "$VERSION release"
-          git push origin --tags
       - name: Deploy
         run: |
           . install_poetry.sh
