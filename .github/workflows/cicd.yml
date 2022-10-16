@@ -25,4 +25,31 @@ jobs:
       - name: Run tests
         run: |
           poetry run pytest
+  production-deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    needs: default
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Configure Git
+        run: |
+          git config --global user.email "github-actions@github.com"
+          git config --global user.name "github-actions"
+      - name: Git tag
+        run: |
+          export VERSION=$(poetry version -s)
+          git tag -a $VERSION -m "$VERSION release"
+          git push origin --tags
+      - name: Deploy
+        run: |
+          . install_poetry.sh
+          . install_deployment_dependencies.sh
+          . build_package.sh
+          aws s3 mv deployment-package.zip s3://fizzbuzzjazz-twitter-bot
+          aws lambda update-function-code --function-name ${{ secrets.AWS_LAMBDA_FUNCTION_NAME }} --region ${{ secrets.AWS_LAMBDA_REGION }}      
   
